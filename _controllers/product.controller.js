@@ -114,3 +114,28 @@ exports.delete_product = async (req, res) => {
         res.status(500).json({ message: error });
     }
 }
+
+exports.faire_une_offre = async (req, res) => {
+    try {
+        if (!isValidObjectId(req.params.id)) throw "Problème lors de l'envoi de l'offre."
+
+        const product = await ProductModel.findByIdAndUpdate(req.params.id, { $push: { offres: req.body.offre } }, { new: true, upsert: true })
+        res.status(200).json({ response: product })
+    } catch (error) {
+        if ((!isEmpty(error) && error)) {
+            req.body.offre.images?.forEach(image => {
+                const typeFile = image?.split("-")[0]
+                let pathFilename = ""
+
+                if (typeFile === "image")
+                    pathFilename = `${__dirname}/../public/images/${image}`
+
+                if (typeof pathFilename === 'string' && fs.existsSync(pathFilename))
+                    fs.unlink(pathFilename, (error) => { if (error) throw error })
+                else
+                    console.log(`Le fichier ${pathFilename} n'existe pas`);
+            })
+        }
+        res.status(500).json({ message: error });
+    }
+}
