@@ -139,3 +139,30 @@ exports.faire_une_offre = async (req, res) => {
         res.status(500).json({ message: error });
     }
 }
+
+
+exports.likes = async (req, res) => {
+    try {
+        const { me } = req.body
+        if (!isValidObjectId(req.params.id) || !me) throw "Problème lors du like.";
+
+        const like = await ProductModel.findByIdAndUpdate(req.params.id, { $addToSet: { likes: me } }, { new: true, upsert: true })
+        if (!like) throw "Problème lors du like.";
+        res.status(200).json({ response: like, message: "Produit aimé." })
+    } catch (error) {
+        res.status(500).send({ message: error })
+    }
+}
+
+exports.dislikes = async (req, res) => {
+    try {
+        const { me } = req.body
+        if (!isValidObjectId(req.params.id) || !me) throw "Problème lors du dislikes.";
+
+        const dislike = await ProductModel.findByIdAndUpdate(req.params.id, { $pull: { likes: me } }, { new: true })
+        if (!dislike) throw "Problème lors du dislikes.";
+        res.status(200).json({ response: dislike, message: "Produit disliké" })
+    } catch (error) {
+        res.status(500).send({ message: error })
+    }
+}
